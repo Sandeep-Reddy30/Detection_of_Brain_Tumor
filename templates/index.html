@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Tumor Detection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* General Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Body Styling */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom right, #2c3e50, #3498db);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Main Container */
+        .container {
+            background: #fff;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        /* Title Styling */
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        /* Upload Form Styling */
+        .upload-section {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            color: white;
+            background-color: #3498db;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .upload-label:hover {
+            background-color: #2980b9;
+        }
+
+        button {
+            padding: 0.7rem 1.5rem;
+            font-size: 1rem;
+            color: white;
+            background-color: #e74c3c;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #c0392b;
+        }
+
+        /* Image and Prediction Styling */
+        .result-section {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .result-section img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .prediction {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .confidence {
+            font-size: 1.1rem;
+            color: #555;
+        }
+
+        /* Progress Bar Styling */
+        .progress-bar-container {
+            width: 100%;
+            background-color: #f1f1f1;
+            border-radius: 25px;
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            height: 15px;
+            width: 0;
+            background-color: #3498db;
+            border-radius: 25px;
+            transition: width 0.1s ease-out;
+        }
+
+        /* Text Styling */
+        .status-text {
+            font-size: 1.1rem;
+            color: #555;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        /* File Name Styling */
+        #file-name {
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+            color: #2c3e50;
+            border: 1px solid #ccc;
+            padding: 0.5rem;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-brain"></i> Brain Tumor Detection</h1>
+
+        <!-- Upload Form -->
+        <div class="upload-section">
+            <form action="/" method="POST" enctype="multipart/form-data" id="upload-form" onsubmit="startProgressBar(event)">
+                <label class="upload-label" for="file"><i class="fas fa-upload"></i> Choose Image</label>
+                <input type="file" name="file" id="file" required onchange="displayFileName()">
+                <div id="file-name"></div>
+                <br>
+                <button type="submit" id="upload-btn"><i class="fas fa-file-import"></i> Upload & Analyze</button>
+            </form>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="progress-bar-container" class="progress-bar-container" style="display: none;">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+
+        <!-- Status Text -->
+        <div id="status-text" class="status-text" style="display: none;">Getting Image...</div>
+
+        <!-- Display Result -->
+        {% if filename %}
+            <div class="result-section">
+                <h2>Uploaded Image:</h2>
+                <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Uploaded Image">
+
+                <div class="prediction">Prediction: {{ predicted_label }}</div>
+                <div class="confidence">Confidence: {{ confidence }}%</div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Display selected file name
+        function displayFileName() {
+            const fileInput = document.getElementById('file');
+            const fileNameDisplay = document.getElementById('file-name');
+            fileNameDisplay.textContent = fileInput.files[0] ? fileInput.files[0].name : '';
+            fileNameDisplay.style.fontSize = '1rem';
+            fileNameDisplay.style.color = '#2c3e50';
+        }
+
+        // Show progress bar and status text during file upload
+        function startProgressBar(event) {
+            // Prevent immediate form submission
+            event.preventDefault();
+
+            // Show the progress bar and initial status message
+            const progressBarContainer = document.getElementById("progress-bar-container");
+            const progressBar = document.getElementById("progress-bar");
+            const statusText = document.getElementById("status-text");
+
+            progressBarContainer.style.display = "block";
+            statusText.style.display = "block";
+
+            let progress = 0;
+
+            // Update progress and status message every 5 seconds
+            const texts = [
+                "Getting Image...",
+                "Feature Extraction...",
+                "Analyzing MRI...",
+                "Processing Data...",
+                "Classifying Tumor...",
+                "Finalizing Results..."
+            ];
+            
+            const interval = setInterval(function() {
+                if (progress < 100) {
+                    progress += 10; // Progress increases by 5% every second
+                    progressBar.style.width = progress + "%";
+                    
+                    // Update status text at specific progress levels
+                    const messageIndex = Math.floor(progress / 20);
+                    statusText.textContent = texts[messageIndex] || "Loading...";
+                } else {
+                    clearInterval(interval);
+                    statusText.textContent = "Analysis Complete!";
+                    
+                    // Submit the form after 20 seconds
+                    document.getElementById("upload-form").submit();
+                }
+            }, 1000); // Update every 1000ms (1 second)
+        }
+
+        // On page load, reset the form and hide progress bar, status text, and file name
+        window.onload = function() {
+            document.getElementById("progress-bar-container").style.display = "none";
+            document.getElementById("status-text").style.display = "none";
+            document.getElementById("file-name").textContent = '';
+        };
+    </script>
+</body>
+</html>
