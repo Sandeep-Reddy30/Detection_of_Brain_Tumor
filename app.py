@@ -11,11 +11,11 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 
 # Path to save uploaded images
-app.config['UPLOAD_FOLDER'] = r'e:\AI-ML[VS Code]\brain_tumor_hosting-master\static\uploads'
+app.config['UPLOAD_FOLDER'] = r'e:\AI-ML_VS_Code\brain_tumor_hosting-master\static\uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
 
 # Load the trained model
-model = load_model(r'e:\AI-ML[VS Code]\brain_tumor_hosting-master\brain_tumor_detection_model.h5')
+model = load_model(r'e:\AI-ML_VS_Code\brain_tumor_hosting-master\brain_tumor_detection_model.h5')
 
 # Define the categories for tumor types
 categories = ["glioma", "meningioma", "notumor", "pituitary"]
